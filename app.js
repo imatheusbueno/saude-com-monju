@@ -4,12 +4,12 @@ const SUPABASE_PUBLIC_KEY = 'sb_publishable_-UJMBgbbglRJKu0izI5J7A_U-Ptqo9u';
 
 const cloud = window.supabase && SUPABASE_URL && SUPABASE_PUBLIC_KEY ? supabase.createClient(SUPABASE_URL, SUPABASE_PUBLIC_KEY) : null;
 const KEY = 'doses-app-v1';
-const ZONES = [['ab_sd', 'Abdômen superior direito', 148, 271, 14, 13], ['ab_se', 'Abdômen superior esquerdo', 205, 271, 14, 13],
-  ['ab_id', 'Abdômen inferior direito', 148, 317, 14, 13], ['ab_ie', 'Abdômen inferior esquerdo', 205, 317, 14, 13],
-  ['ab_ld', 'Lateral direita do abdômen', 111, 290, 9, 22], ['ab_le', 'Lateral esquerda do abdômen', 241, 290, 9, 22],
-  ['c_ld', 'Coxa direita (lateral)', 103, 455, 9, 22], ['c_fd', 'Coxa direita (frente)', 137, 460, 15, 24],
-  ['c_fe', 'Coxa esquerda (frente)', 215, 460, 15, 24], ['c_le', 'Coxa esquerda (lateral)', 250, 455, 9, 22],
-  ['a_d', 'Braço direito', 77, 230, 11, 26], ['a_e', 'Braço esquerdo', 276, 230, 11, 26]];
+const ZONES = [['ab_sd', 'Abdômen superior direito', 326, 596, 31, 29], ['ab_se', 'Abdômen superior esquerdo', 451, 596, 31, 29],
+  ['ab_id', 'Abdômen inferior direito', 326, 697, 31, 29], ['ab_ie', 'Abdômen inferior esquerdo', 451, 697, 31, 29],
+  ['ab_ld', 'Lateral direita do abdômen', 244, 638, 20, 48], ['ab_le', 'Lateral esquerda do abdômen', 530, 638, 20, 48],
+  ['c_ld', 'Coxa direita (lateral)', 227, 1001, 20, 48], ['c_fd', 'Coxa direita (frente)', 301, 1012, 33, 53],
+  ['c_fe', 'Coxa esquerda (frente)', 473, 1012, 33, 53], ['c_le', 'Coxa esquerda (lateral)', 550, 1001, 20, 48],
+  ['a_d', 'Braço direito', 169, 506, 24, 57], ['a_e', 'Braço esquerdo', 607, 506, 24, 57]];
 const ML = { cafe: ['Café da manhã', '☕'], lanche_m: ['Lanche da manhã', '🍎'], almoco: ['Almoço', '🥗'], lanche_t: ['Lanche da tarde', '🍳'], jantar: ['Jantar', '🍜'], lanches: ['Lanches', '🍎'] };
 const FOODS = [['Arroz branco (100 g)', 130, 2.7, 28, .3, .4], ['Feijão cozido (100 g)', 76, 4.8, 14, .5, 8.5], ['Peito de frango grelhado (100 g)', 165, 31, 0, 3.6, 0], ['Carne bovina grelhada (100 g)', 220, 26, 0, 12, 0], ['Ovo cozido (1 un)', 78, 6.3, .6, 5.3, 0], ['Pão francês (1 un)', 150, 4.7, 29, 1.5, 1.4], ['Banana (1 un)', 89, 1.1, 23, .3, 2.6], ['Maçã (1 un)', 72, .4, 19, .2, 3.3], ['Iogurte natural (170 g)', 104, 5.9, 8, 5.6, 0], ['Salada de alface (100 g)', 15, 1.4, 2.9, .2, 1.3], ['Café com leite (1 xícara)', 60, 3, 5, 3, 0], ['Whey protein (1 dose)', 120, 24, 3, 1.5, 0]];
 const MEAL_OPTIONS = [['cafe', 'Café da manhã', '☕'], ['lanche_m', 'Lanche da manhã', '🍎'], ['almoco', 'Almoço', '🥗'], ['lanche_t', 'Lanche da tarde', '🍳'], ['jantar', 'Jantar', '🍜']];
@@ -186,10 +186,10 @@ const zoneLeft = (id, date) => { let m = 0; S.apps.forEach(a => { if (a.site !==
 const suggest = date => { const lu = id => Math.max(0, ...S.apps.filter(a => a.site === id).map(a => +new Date(a.at))); return ZONES.map(z => z[0]).filter(id => !zoneLeft(id, date)).sort((a, b) => lu(a) - lu(b))[0] || '' };
 function figure(sel, date, click) {
   const z = ZONES.map(([id, l, cx, cy, rx, ry]) => { const left = zoneLeft(id, date), cls = id === sel ? 'zs' : left ? 'zb' : 'zf';
-    return `<g class="z ${cls} ${click ? 'z-clickable' : ''}" ${click ? `data-a="zone" data-v="${id}" role="button" tabindex="0" aria-label="${esc(l)}${left ? `, livre em ${left} dias` : ''}"` : ''}><title>${esc(l)}${left ? ` — livre em ${left}d` : ''}</title><ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"/>${id === sel ? `<circle class="zone-selected-dot" cx="${cx}" cy="${cy}" r="3.5"/>` : ''}</g>` }).join('');
+    return `<g class="z ${cls} ${click ? 'z-clickable' : ''}" ${click ? `data-a="zone" data-v="${id}" role="button" tabindex="0" aria-label="${esc(l)}${left ? `, livre em ${left} dias` : ''}"` : ''}><title>${esc(l)}${left ? ` — livre em ${left}d` : ''}</title><ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"/>${id === sel ? `<circle class="zone-selected-dot" cx="${cx}" cy="${cy}" r="8"/>` : ''}</g>` }).join('');
   return `<div class="fig-wrap">
     <img class="fig-photo" src="injection-map.png" alt="Ilustração frontal com os locais disponíveis para aplicação">
-    <svg viewBox="0 0 349 550" class="fig photo-fig" role="group" aria-label="Selecione um local para aplicação">${z}</svg>
+    <svg viewBox="0 0 768 1210" class="fig photo-fig" role="group" aria-label="Selecione um local para aplicação">${z}</svg>
   </div>`;
 }
 const grab = () => { ctx.f = Object.assign(ctx.f || {}, { at: $('#fa').value, notes: $('#fn').value, med: $('#fm').value, dose: $('#fd').value, pain: $('#fp').value }) };
