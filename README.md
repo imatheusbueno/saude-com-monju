@@ -35,6 +35,10 @@ O app oferece cadastro e login com e-mail e senha, redefinição de senha por e-
 
 O login Google ainda depende da configuração do OAuth Client ID/Secret no Google Cloud e no Supabase. Client Secret do Google só deve ser informado no painel Supabase, nunca no código, GitHub ou chat.
 
+### Erro ao criar conta: limite de e-mail
+
+Se o Supabase responder `email rate limit exceeded` (HTTP 429), ele bloqueou temporariamente o envio de mensagens de confirmação após muitas tentativas. Aguarde o limite ser liberado antes de tentar novamente e evite clicar várias vezes em **Criar conta**. O SMTP padrão do Supabase tem limite baixo; para uso público, configure um provedor SMTP próprio nas configurações de autenticação do Supabase. Nunca coloque credenciais SMTP no front-end.
+
 A chave `publishable` é pública e pode ser incluída no navegador; ela **não** substitui as regras de acesso. Nunca coloque a chave `secret`/`service_role` no front-end. A tabela usa RLS e só permite que uma conta autenticada leia e altere a linha cujo `user_id` corresponde à própria conta. Os dados de cada conta são salvos no navegador e sincronizados com a nuvem. Configure as URLs autorizadas corretamente antes de compartilhar o site.
 
 ## Código público e site público

@@ -226,6 +226,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .auth-eyebrow{margin:0 0 10px;color:var(--g);font-size:11px;font-weight:700;letter-spacing:.15em}
 .auth-card h1{font-size:clamp(27px,6vw,34px)}
 .auth-description{max-width:380px;margin:12px auto 24px;line-height:1.55}
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;max-width:390px;margin:0 auto 22px;padding:4px;border:1px solid var(--ln);border-radius:14px;background:#f5f7f5}
+.auth-tabs button{min-height:42px;border:0;border-radius:10px;background:transparent;color:var(--mu);font:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background .18s ease,color .18s ease,box-shadow .18s ease}
+.auth-tabs button.active{background:#fff;color:var(--g);box-shadow:0 2px 8px #21332412}
+.auth-signup-hint{display:flex;align-items:flex-start;gap:8px;max-width:390px;margin:14px auto 0;color:var(--mu);font-size:12px;line-height:1.5;text-align:left}
+.auth-signup-hint .icon{flex:none;color:var(--g)}
 .auth-form{display:grid;gap:9px;max-width:390px;margin:0 auto;text-align:left}
 .auth-label{margin-top:5px;color:#34443a;font-size:13px;font-weight:600}
 .auth-input{width:100%;min-height:48px;padding:12px 14px;border:1px solid #dfe6df;border-radius:12px;background:#fff;color:var(--ink);font:inherit}

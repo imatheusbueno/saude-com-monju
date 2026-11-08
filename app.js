@@ -356,22 +356,26 @@ function authView() {
         ? `<form class="auth-form" id="authForm"><label class="auth-label" for="authPassword">Nova senha</label>
             <input class="auth-input" id="authPassword" name="password" type="password" autocomplete="new-password" minlength="8" placeholder="Pelo menos 8 caracteres" required>
             <button class="btn auth-submit" type="submit">Salvar nova senha</button></form>`
-        : `<form class="auth-form" id="authForm">
+        : `<div class="auth-tabs" role="tablist" aria-label="Acesso à conta">
+            <button type="button" role="tab" aria-selected="${authMode === 'signin'}" class="${authMode === 'signin' ? 'active' : ''}" data-a="authMode" data-v="signin">Entrar</button>
+            <button type="button" role="tab" aria-selected="${authMode === 'signup'}" class="${authMode === 'signup' ? 'active' : ''}" data-a="authMode" data-v="signup">Criar conta</button>
+          </div>
+          <form class="auth-form" id="authForm">
             <label class="auth-label" for="authEmail">E-mail</label>
             <input class="auth-input" id="authEmail" name="email" type="email" autocomplete="email" placeholder="voce@exemplo.com" required>
             <label class="auth-label" for="authPassword">Senha</label>
             <input class="auth-input" id="authPassword" name="password" type="password" autocomplete="${authMode === 'signup' ? 'new-password' : 'current-password'}" minlength="8" placeholder="Pelo menos 8 caracteres" required>
             ${authMode === 'signin' ? `<button type="button" class="auth-forgot" data-a="resetPassword">Esqueci minha senha</button>` : ''}
-            <button class="btn auth-submit" type="submit">${authMode === 'signup' ? 'Criar conta' : 'Entrar com e-mail'}</button>
+            <button class="btn auth-submit" type="submit">${authMode === 'signup' ? 'Criar minha conta' : 'Entrar com e-mail'}</button>
           </form>
-          <p class="auth-signup">${authMode === 'signup' ? 'Já tem uma conta?' : 'Ainda não tem uma conta?'}
-            <button type="button" class="auth-switch" data-a="authMode">${authMode === 'signup' ? 'Entrar' : 'Criar conta'}</button>
-          </p>
+          ${authMode === 'signup'
+            ? `<p class="auth-signup-hint"><i data-lucide="mail-check" aria-hidden="true"></i> Enviaremos um link para confirmar seu e-mail antes do primeiro acesso.</p>`
+            : ''}
           <div class="auth-divider"><span>ou</span></div>
           <button class="btn auth-google" data-a="login"><span class="google-mark" aria-hidden="true">G</span> Continuar com Google</button>`;
   return `<section class="auth-screen"><div class="auth-brand"><span class="auth-mark"><i data-lucide="heart-pulse" aria-hidden="true"></i></span><span>MEU CUIDADO</span></div>
     <div class="auth-card"><span class="auth-shield"><i data-lucide="lock-keyhole" aria-hidden="true"></i></span><p class="auth-eyebrow">SEU ESPAÇO PESSOAL</p>
-    <h1>${authRecovery ? 'Defina uma nova senha' : 'Entre para continuar'}</h1><p class="muted auth-description">${authRecovery ? 'Escolha uma senha segura para sua conta.' : 'Acesse ou crie sua conta para registrar e sincronizar seus dados pessoais.'}</p>${content}
+    <h1>${authRecovery ? 'Defina uma nova senha' : authMode === 'signup' ? 'Crie sua conta' : 'Entre para continuar'}</h1><p class="muted auth-description">${authRecovery ? 'Escolha uma senha segura para sua conta.' : authMode === 'signup' ? 'Cadastre-se para começar a registrar e acompanhar seus dados.' : 'Entre para acessar e sincronizar seus registros pessoais.'}</p>${content}
     <p class="auth-privacy"><i data-lucide="shield-check" aria-hidden="true"></i> Seus dados ficam associados à sua conta e protegidos por regras de acesso.</p></div>
     <p class="auth-footnote">Meu Cuidado é um diário pessoal. Não substitui orientação médica ou nutricional.</p></section>`;
 }
@@ -506,7 +510,7 @@ const A = {
       notify('Não foi possível iniciar o login com Google. Confira a configuração do Supabase.');
     }
   },
-  authMode: () => { authMode = authMode === 'signin' ? 'signup' : 'signin'; render(); },
+  authMode: mode => { if (mode === 'signin' || mode === 'signup') { authMode = mode; render(); } },
   resetPassword: async () => {
     const email = $('#authEmail')?.value.trim();
     if (!email) return notify('Informe seu e-mail para receber o link de redefinição.');
@@ -561,10 +565,17 @@ $('#app').addEventListener('submit', async e => {
   } catch (error) {
     console.error('Falha na autenticação por e-mail.', error);
     const message = String(error?.message || '').toLowerCase();
-    notify(message.includes('invalid login credentials') ? 'E-mail ou senha incorretos.' :
-      message.includes('already registered') ? 'Este e-mail já possui uma conta. Tente entrar.' :
-      message.includes('email not confirmed') ? 'Confirme seu e-mail antes de entrar.' :
-      'Não foi possível autenticar. Verifique os dados e tente novamente.');
+    const code = String(error?.code || '').toLowerCase();
+    const status = Number(error?.status);
+    notify(status === 429 || /rate.limit|over_email_send_rate_limit/.test(`${code} ${message}`) ? 'Muitos e-mails de confirmação foram solicitados. Aguarde um pouco e tente novamente.' :
+      /invalid login credentials/.test(message) || code === 'invalid_credentials' ? 'E-mail ou senha incorretos.' :
+      /already registered|already exists/.test(message) || /user_already_exists|user_already_registered/.test(code) ? 'Este e-mail já possui uma conta. Tente entrar.' :
+      /email not confirmed/.test(message) || code === 'email_not_confirmed' ? 'Confirme seu e-mail antes de entrar. Confira também a caixa de spam.' :
+      /weak password|password.*(short|length)/.test(message) || code === 'weak_password' ? 'A senha não atende aos requisitos do Supabase. Use uma senha mais longa.' :
+      /invalid email|email.*invalid/.test(message) || code === 'email_address_invalid' ? 'O formato do e-mail não foi aceito. Confira o endereço e tente novamente.' :
+      /signup.*disabled|signups not allowed/.test(message) || code === 'signup_disabled' ? 'O cadastro está desativado no Supabase. Ative “Allow new users to sign up” nas configurações de autenticação.' :
+      /captcha/.test(`${code} ${message}`) ? 'O Supabase exige uma verificação anti-robô que ainda não está configurada no app.' :
+      `Erro do Supabase${code ? ` (${code})` : status ? ` (HTTP ${status})` : ''}: ${error?.message || 'não foi possível autenticar'}`);
   } finally {
     if (submit.isConnected) submit.disabled = false;
   }
@@ -573,7 +584,7 @@ document.addEventListener('click', e => {
   const t = e.target.closest('[data-a]');
   if (!t) { if (!e.target.closest('#sheet,#fab')) $('#sheet').hidden = true; return; }
   if (t.dataset.a === 'login' && cloud && authReady && !user) { A.login(); return; }
-  if (['authMode', 'resetPassword'].includes(t.dataset.a) && cloud && authReady && !user) { A[t.dataset.a](); return; }
+  if (['authMode', 'resetPassword'].includes(t.dataset.a) && cloud && authReady && !user) { A[t.dataset.a](t.dataset.v); return; }
   if (!cloud || !authReady || !user) return;
   if (A[t.dataset.a]) A[t.dataset.a](t.dataset.v);
 });
