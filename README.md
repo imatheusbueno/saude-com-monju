@@ -29,7 +29,7 @@ O app oferece cadastro e login com e-mail e senha, redefinição de senha por e-
 ### Ativar Google OAuth (opcional)
 
 1. No Google Cloud Console, crie ou selecione um projeto e configure a **OAuth consent screen** com as informações do app. Para testes em modo **Testing**, inclua os e-mails de teste; a publicação para qualquer pessoa pode exigir validação do Google.
-2. Crie um **OAuth Client ID** do tipo **Web application**. Em **Authorized redirect URIs**, adicione o callback exibido no painel do Supabase: `https://SEU-PROJETO.supabase.co/auth/v1/callback`.
+2. Crie um **OAuth Client ID** do tipo **Web application**. Em **Authorized JavaScript origins**, informe somente `https://imatheusbueno.github.io` (sem `/saude-com-monju/` no final). Em **Authorized redirect URIs**, adicione `https://cprvwstvlqdmuusabina.supabase.co/auth/v1/callback`.
 3. Copie o Client ID e o Client Secret do Google para **Supabase > Authentication > Providers > Google** e habilite o provedor.
 4. Salve a configuração e teste o botão **Continuar com Google** no site publicado.
 
