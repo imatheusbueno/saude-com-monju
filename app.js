@@ -1,4 +1,4 @@
-// O app exige login Google. Configure o projeto Supabase aqui para liberar o acesso.
+// Configure o Supabase aqui para liberar cadastro e login.
 const SUPABASE_URL = '', SUPABASE_ANON_KEY = '';
 
 const cloud = window.supabase && SUPABASE_URL && SUPABASE_ANON_KEY ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
@@ -98,7 +98,7 @@ function loadStoredData(key) {
   try { return Object.assign(def(), JSON.parse(localStorage.getItem(key) || '{}')); }
   catch (error) { console.error('Não foi possível carregar os dados salvos neste aparelho.', error); return def(); }
 }
-let user = null, activeUserId = null, authReady = false, tab = 'home', screen = null, day = ymd(new Date()), ctx = {}, pushT;
+let user = null, activeUserId = null, authReady = false, authRecovery = false, authMode = 'signin', tab = 'home', screen = null, day = ymd(new Date()), ctx = {}, pushT;
 const storageKey = () => user ? `${KEY}:${user.id}` : KEY;
 let toastT;
 function notify(message) {
@@ -347,20 +347,42 @@ const foodList = q => FOODS.map((f, i) => [f, i]).filter(([f]) => f[0].toLowerCa
 function authView() {
   const configured = !!cloud;
   const content = !configured
-    ? `<div class="auth-notice"><i data-lucide="shield-alert" aria-hidden="true"></i><div><b>Login ainda não configurado</b><p>Para liberar o app, conecte o Supabase e ative o provedor Google. Enquanto isso, os registros permanecem bloqueados.</p></div></div>
+    ? `<div class="auth-notice"><i data-lucide="shield-alert" aria-hidden="true"></i><div><b>Login ainda não configurado</b><p>Para liberar o app, conecte o Supabase. Enquanto isso, os registros permanecem bloqueados.</p></div></div>
       <a class="auth-help" href="README.md" target="_blank" rel="noopener">Ver instruções de configuração <i data-lucide="arrow-up-right" aria-hidden="true"></i></a>`
     : !authReady
       ? `<div class="auth-loading"><span class="auth-spinner"></span><p>Verificando sua conta...</p></div>`
-      : `<button class="btn auth-google" data-a="login"><span class="google-mark" aria-hidden="true">G</span> Continuar com Google</button>
-      <p class="auth-signup">Primeiro acesso? O cadastro é criado automaticamente ao continuar com sua conta Google.</p>`;
+      : authRecovery
+        ? `<form class="auth-form" id="authForm"><label class="auth-label" for="authPassword">Nova senha</label>
+            <input class="auth-input" id="authPassword" name="password" type="password" autocomplete="new-password" minlength="8" placeholder="Pelo menos 8 caracteres" required>
+            <button class="btn auth-submit" type="submit">Salvar nova senha</button></form>`
+        : `<form class="auth-form" id="authForm">
+            <label class="auth-label" for="authEmail">E-mail</label>
+            <input class="auth-input" id="authEmail" name="email" type="email" autocomplete="email" placeholder="voce@exemplo.com" required>
+            <label class="auth-label" for="authPassword">Senha</label>
+            <input class="auth-input" id="authPassword" name="password" type="password" autocomplete="${authMode === 'signup' ? 'new-password' : 'current-password'}" minlength="8" placeholder="Pelo menos 8 caracteres" required>
+            ${authMode === 'signin' ? `<button type="button" class="auth-forgot" data-a="resetPassword">Esqueci minha senha</button>` : ''}
+            <button class="btn auth-submit" type="submit">${authMode === 'signup' ? 'Criar conta' : 'Entrar com e-mail'}</button>
+          </form>
+          <p class="auth-signup">${authMode === 'signup' ? 'Já tem uma conta?' : 'Ainda não tem uma conta?'}
+            <button type="button" class="auth-switch" data-a="authMode">${authMode === 'signup' ? 'Entrar' : 'Criar conta'}</button>
+          </p>
+          <div class="auth-divider"><span>ou</span></div>
+          <button class="btn auth-google" data-a="login"><span class="google-mark" aria-hidden="true">G</span> Continuar com Google</button>`;
   return `<section class="auth-screen"><div class="auth-brand"><span class="auth-mark"><i data-lucide="heart-pulse" aria-hidden="true"></i></span><span>MEU CUIDADO</span></div>
     <div class="auth-card"><span class="auth-shield"><i data-lucide="lock-keyhole" aria-hidden="true"></i></span><p class="auth-eyebrow">SEU ESPAÇO PESSOAL</p>
-    <h1>Entre para continuar</h1><p class="muted auth-description">Acesse com sua conta Google para registrar e sincronizar seus dados pessoais.</p>${content}
+    <h1>${authRecovery ? 'Defina uma nova senha' : 'Entre para continuar'}</h1><p class="muted auth-description">${authRecovery ? 'Escolha uma senha segura para sua conta.' : 'Acesse ou crie sua conta para registrar e sincronizar seus dados pessoais.'}</p>${content}
     <p class="auth-privacy"><i data-lucide="shield-check" aria-hidden="true"></i> Seus dados ficam associados à sua conta e protegidos por regras de acesso.</p></div>
     <p class="auth-footnote">Meu Cuidado é um diário pessoal. Não substitui orientação médica ou nutricional.</p></section>`;
 }
 
 function render() {
+  if (authRecovery) {
+    $('#app').innerHTML = authView();
+    $('#app').dataset.view = 'auth';
+    replaceEmojis($('#app'));
+    $('#tabs').hidden = true; $('#fab').hidden = true; $('#fab2').hidden = true; $('#sheet').hidden = true;
+    return;
+  }
   if (!cloud || !authReady || !user) {
     $('#app').innerHTML = authView();
     $('#app').dataset.view = 'auth';
@@ -483,6 +505,19 @@ const A = {
       notify('Não foi possível iniciar o login com Google. Confira a configuração do Supabase.');
     }
   },
+  authMode: () => { authMode = authMode === 'signin' ? 'signup' : 'signin'; render(); },
+  resetPassword: async () => {
+    const email = $('#authEmail')?.value.trim();
+    if (!email) return notify('Informe seu e-mail para receber o link de redefinição.');
+    try {
+      const { error } = await cloud.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+      if (error) throw error;
+      notify('Se este e-mail estiver cadastrado, você receberá um link para redefinir a senha.');
+    } catch (error) {
+      console.error('Falha ao solicitar redefinição de senha.', error);
+      notify('Não foi possível solicitar a redefinição. Confira o e-mail e tente novamente.');
+    }
+  },
   logout: async () => {
     const { error } = await cloud.auth.signOut();
     if (error) { console.error('Falha ao sair da conta.', error); notify('Não foi possível sair da conta.'); }
@@ -498,19 +533,57 @@ const A = {
     notify(cloud && user ? 'Os dados deste perfil foram apagados.' : 'Os dados locais deste perfil foram apagados.');
   }
 };
+$('#app').addEventListener('submit', async e => {
+  if (e.target.id !== 'authForm') return;
+  e.preventDefault();
+  if (!cloud || !authReady || (user && !authRecovery)) return;
+  const form = new FormData(e.target), email = String(form.get('email') || '').trim(), password = String(form.get('password') || '');
+  if (password.length < 8) return notify('A senha precisa ter pelo menos 8 caracteres.');
+  const submit = e.target.querySelector('[type="submit"]');
+  submit.disabled = true;
+  try {
+    if (authRecovery) {
+      const { error } = await cloud.auth.updateUser({ password });
+      if (error) throw error;
+      authRecovery = false;
+      authMode = 'signin';
+      notify('Senha atualizada com sucesso.');
+      render();
+    } else if (authMode === 'signup') {
+      const { data, error } = await cloud.auth.signUp({ email, password, options: { emailRedirectTo: location.origin + location.pathname } });
+      if (error) throw error;
+      if (!data.session) notify('Cadastro iniciado. Confira seu e-mail para confirmar a conta e entrar.');
+    } else {
+      const { error } = await cloud.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+    }
+  } catch (error) {
+    console.error('Falha na autenticação por e-mail.', error);
+    const message = String(error?.message || '').toLowerCase();
+    notify(message.includes('invalid login credentials') ? 'E-mail ou senha incorretos.' :
+      message.includes('already registered') ? 'Este e-mail já possui uma conta. Tente entrar.' :
+      message.includes('email not confirmed') ? 'Confirme seu e-mail antes de entrar.' :
+      'Não foi possível autenticar. Verifique os dados e tente novamente.');
+  } finally {
+    if (submit.isConnected) submit.disabled = false;
+  }
+});
 document.addEventListener('click', e => {
   const t = e.target.closest('[data-a]');
   if (!t) { if (!e.target.closest('#sheet,#fab')) $('#sheet').hidden = true; return; }
   if (t.dataset.a === 'login' && cloud && authReady && !user) { A.login(); return; }
+  if (['authMode', 'resetPassword'].includes(t.dataset.a) && cloud && authReady && !user) { A[t.dataset.a](); return; }
   if (!cloud || !authReady || !user) return;
   if (A[t.dataset.a]) A[t.dataset.a](t.dataset.v);
 });
 $('#mf').onchange = async e => { const f = e.target.files[0]; e.target.value = ''; if (!f) return; const img = await shrink(f), name = prompt('Nome da refeição:'); if (!name) return; addMeal({ name, kcal: num(prompt('Calorias (kcal):')) || 0, img }) };
 $('#pf').onchange = async e => { const f = e.target.files[0]; e.target.value = ''; if (!f) return; S.photos.push({ d: ymd(new Date()), img: await shrink(f, 600) }); save(); render() };
 
-if (cloud) cloud.auth.onAuthStateChange((_e, s) => {
+if (cloud) cloud.auth.onAuthStateChange((event, s) => {
   const nextUser = s?.user || null;
   const nextUserId = nextUser?.id || null;
+  if (event === 'PASSWORD_RECOVERY') { authRecovery = true; authMode = 'update'; }
+  if (event === 'SIGNED_OUT') { authRecovery = false; authMode = 'signin'; }
   authReady = true;
   if (nextUserId !== activeUserId) {
     user = nextUser;
