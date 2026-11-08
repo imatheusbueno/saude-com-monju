@@ -7,8 +7,8 @@ const KEY = 'doses-app-v1';
 const ZONES = [['ab_sd', 'Abdômen superior direito', 148, 271, 14, 13], ['ab_se', 'Abdômen superior esquerdo', 205, 271, 14, 13],
   ['ab_id', 'Abdômen inferior direito', 148, 317, 14, 13], ['ab_ie', 'Abdômen inferior esquerdo', 205, 317, 14, 13],
   ['ab_ld', 'Lateral direita do abdômen', 111, 290, 9, 22], ['ab_le', 'Lateral esquerda do abdômen', 241, 290, 9, 22],
-  ['c_ld', 'Coxa direita (lateral)', 103, 464, 9, 24], ['c_fd', 'Coxa direita (frente)', 137, 460, 15, 24],
-  ['c_fe', 'Coxa esquerda (frente)', 215, 460, 15, 24], ['c_le', 'Coxa esquerda (lateral)', 250, 464, 9, 24],
+  ['c_ld', 'Coxa direita (lateral)', 103, 455, 9, 22], ['c_fd', 'Coxa direita (frente)', 137, 460, 15, 24],
+  ['c_fe', 'Coxa esquerda (frente)', 215, 460, 15, 24], ['c_le', 'Coxa esquerda (lateral)', 250, 455, 9, 22],
   ['a_d', 'Braço direito', 77, 230, 11, 26], ['a_e', 'Braço esquerdo', 276, 230, 11, 26]];
 const ML = { cafe: ['Café da manhã', '☕'], lanche_m: ['Lanche da manhã', '🍎'], almoco: ['Almoço', '🥗'], lanche_t: ['Lanche da tarde', '🍳'], jantar: ['Jantar', '🍜'], lanches: ['Lanches', '🍎'] };
 const FOODS = [['Arroz branco (100 g)', 130, 2.7, 28, .3, .4], ['Feijão cozido (100 g)', 76, 4.8, 14, .5, 8.5], ['Peito de frango grelhado (100 g)', 165, 31, 0, 3.6, 0], ['Carne bovina grelhada (100 g)', 220, 26, 0, 12, 0], ['Ovo cozido (1 un)', 78, 6.3, .6, 5.3, 0], ['Pão francês (1 un)', 150, 4.7, 29, 1.5, 1.4], ['Banana (1 un)', 89, 1.1, 23, .3, 2.6], ['Maçã (1 un)', 72, .4, 19, .2, 3.3], ['Iogurte natural (170 g)', 104, 5.9, 8, 5.6, 0], ['Salada de alface (100 g)', 15, 1.4, 2.9, .2, 1.3], ['Café com leite (1 xícara)', 60, 3, 5, 3, 0], ['Whey protein (1 dose)', 120, 24, 3, 1.5, 0]];
@@ -99,7 +99,7 @@ function loadStoredData(key) {
   try { return Object.assign(def(), JSON.parse(localStorage.getItem(key) || '{}')); }
   catch (error) { console.error('Não foi possível carregar os dados salvos neste aparelho.', error); return def(); }
 }
-let user = null, activeUserId = null, authReady = false, authRecovery = false, authMode = 'signin', tab = 'home', screen = null, day = ymd(new Date()), ctx = {}, pushT, pullGesture = null, pullRefreshing = false, pullHideT, sheetDrag = null;
+let user = null, activeUserId = null, authReady = false, authRecovery = false, authMode = 'signin', tab = 'home', screen = null, day = ymd(new Date()), ctx = {}, pushT, sheetDrag = null;
 const storageKey = () => user ? `${KEY}:${user.id}` : KEY;
 let toastT;
 function notify(message) {
@@ -144,29 +144,6 @@ async function pull() {
     return false;
   }
 }
-function setPullIndicator(distance, label) {
-  const indicator = $('#pull-refresh'), text = $('#pull-refresh-label');
-  if (!indicator || !text) return;
-  indicator.classList.toggle('is-visible', distance > 0);
-  indicator.style.setProperty('--pull-offset', `${distance}px`);
-  indicator.setAttribute('aria-hidden', distance > 0 ? 'false' : 'true');
-  if (label) text.textContent = label;
-}
-async function refreshFromGesture() {
-  if (pullRefreshing || !user) return;
-  pullRefreshing = true;
-  clearTimeout(pullHideT);
-  $('#pull-refresh')?.classList.add('is-loading');
-  setPullIndicator(62, 'Atualizando…');
-  const synced = await pull();
-  $('#pull-refresh')?.classList.remove('is-loading');
-  setPullIndicator(62, synced ? 'Atualizado' : 'Não foi possível atualizar');
-  pullRefreshing = false;
-  pullHideT = setTimeout(() => {
-    setPullIndicator(0, 'Puxe para atualizar');
-  }, synced ? 900 : 1800);
-}
-
 const lastApp = () => [...S.apps].sort((a, b) => b.at.localeCompare(a.at))[0];
 const nextDate = () => { if (S.nextOverride) return new Date(S.nextOverride); const l = lastApp(); return l ? new Date(new Date(l.at).getTime() + S.interval * 864e5) : null };
 const curW = () => S.weights.length ? [...S.weights].sort((a, b) => a.d.localeCompare(b.d)).at(-1).kg : S.wStart;
@@ -646,35 +623,6 @@ function finishSheetDrag(e) {
 }
 document.addEventListener('pointerup', finishSheetDrag);
 document.addEventListener('pointercancel', finishSheetDrag);
-document.addEventListener('touchstart', e => {
-  if (e.touches.length !== 1) { pullGesture = null; setPullIndicator(0); return; }
-  if (!authReady || !user || screen || pullRefreshing || document.querySelector('.bs')) return;
-  if (window.scrollY > 0 || e.target.closest('button,a,input,select,textarea,[contenteditable="true"],#sheet,#fab,#fab2,#tabs')) return;
-  pullGesture = { x: e.touches[0].clientX, y: e.touches[0].clientY, distance: 0 };
-}, { passive: true });
-document.addEventListener('touchmove', e => {
-  if (!pullGesture) return;
-  if (e.touches.length !== 1) { pullGesture = null; setPullIndicator(0); return; }
-  const touch = e.touches[0], dx = touch.clientX - pullGesture.x, dy = touch.clientY - pullGesture.y;
-  if (Math.abs(dx) > Math.max(12, dy * .7) || dy < 0 || window.scrollY > 0) { pullGesture = null; setPullIndicator(0); return; }
-  if (dy < 8) return;
-  e.preventDefault();
-  pullGesture.distance = dy;
-  const offset = Math.min(62, dy * .68);
-  setPullIndicator(offset, dy >= 90 ? 'Solte para atualizar' : 'Puxe para atualizar');
-}, { passive: false });
-document.addEventListener('touchend', e => {
-  if (e.touches.length) return;
-  if (!pullGesture) return;
-  const shouldRefresh = pullGesture.distance >= 90;
-  pullGesture = null;
-  if (shouldRefresh) refreshFromGesture();
-  else setPullIndicator(0, 'Puxe para atualizar');
-}, { passive: true });
-document.addEventListener('touchcancel', () => {
-  pullGesture = null;
-  setPullIndicator(0, 'Puxe para atualizar');
-}, { passive: true });
 $('#mf').onchange = async e => { const f = e.target.files[0]; e.target.value = ''; if (!f) return; const img = await shrink(f), name = prompt('Nome da refeição:'); if (!name) return; addMeal({ name, kcal: num(prompt('Calorias (kcal):')) || 0, img }) };
 $('#pf').onchange = async e => { const f = e.target.files[0]; e.target.value = ''; if (!f) return; S.photos.push({ d: ymd(new Date()), img: await shrink(f, 600) }); save(); render() };
 
