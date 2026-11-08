@@ -338,7 +338,7 @@ const SC = {
     const f = (id, l, v, ph = '') => `<label class="f" for="${id}">${l}</label><input id="${id}" value="${esc(v ?? '')}" placeholder="${ph}">`;
     return `${back('Ajustes')}<section class="card">${f('sn', 'Seu nome', S.name)}${f('sh', 'Altura (m)', S.height, 'ex.: 1,76')}${f('sw', 'Peso inicial (kg)', S.wStart)}${f('sg', 'Peso meta (kg)', S.wGoal)}${f('sk', 'Meta de calorias por dia', S.kcal)}${f('swater', 'Meta diária de água (ml)', S.waterGoal, 'ex.: 2000')}<p class="muted s">Ajuste conforme sua rotina e orientação profissional; esta meta é apenas para acompanhamento.</p>${f('si', 'Intervalo entre doses (dias)', S.interval)}${f('sb', 'Dias sem repetir o mesmo local', S.block)}${f('sm', 'Medicação', S.medication)}<button class="btn" data-a="saveSet">Salvar ajustes</button></section>
     <section class="card"><b class="ct">Conta e dados</b><p class="muted s">Conectado: ${esc(user?.email || S.email)}. Seus dados sincronizam com a nuvem e só esta conta pode acessá-los.</p>
-    <button class="btn soft" data-a="logout">Sair da conta Google</button>
+    <button class="btn soft" data-a="logout">Sair da conta</button>
     <button class="btn soft" data-a="export">Exportar meus dados</button><button class="btn soft out" data-a="wipe">Apagar todos os meus dados</button></section>`;
   }
 };
