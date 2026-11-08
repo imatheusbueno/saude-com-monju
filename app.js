@@ -93,7 +93,7 @@ const uid = () => Math.random().toString(36).slice(2, 10);
 const kg = n => n == null ? '—' : n.toFixed(1).replace('.', ',');
 const liters = ml => (ml / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 2 });
 
-const def = () => ({ name: '', email: '', interval: 7, block: 30, medication: 'Mounjaro', kcal: 1800, macros: { p: 121, c: 217, g: 50, f: 25 }, waterGoal: 2000, waterByDay: {}, planPrefs: { restrictions: [], avoids: [], style: 'varied', time: 'any' }, planResult: [], wStart: null, wGoal: null, height: null, mealsOn: ['cafe', 'almoco', 'jantar', 'lanches'], planDone: false, closedStart: false, nextOverride: null, apps: [], weights: [], measures: { cintura: [], quadril: [] }, meals: [], saved: [], symptoms: [], bowel: [], photos: [], upd: 0 });
+const def = () => ({ name: '', email: '', theme: 'light', interval: 7, block: 30, medication: 'Mounjaro', kcal: 1800, macros: { p: 121, c: 217, g: 50, f: 25 }, waterGoal: 2000, waterByDay: {}, planPrefs: { restrictions: [], avoids: [], style: 'varied', time: 'any' }, planResult: [], wStart: null, wGoal: null, height: null, mealsOn: ['cafe', 'almoco', 'jantar', 'lanches'], planDone: false, closedStart: false, nextOverride: null, apps: [], weights: [], measures: { cintura: [], quadril: [] }, meals: [], saved: [], symptoms: [], bowel: [], photos: [], upd: 0 });
 let S = def();
 function loadStoredData(key) {
   try { return Object.assign(def(), JSON.parse(localStorage.getItem(key) || '{}')); }
@@ -113,6 +113,11 @@ function notify(message) {
 function persist() {
   try { localStorage.setItem(storageKey(), JSON.stringify(S)); }
   catch (error) { console.error('Não foi possível salvar os dados neste aparelho.', error); alert('Sem espaço para salvar. Exporte seus dados ou remova fotos antigas.'); }
+}
+function applyTheme() {
+  const dark = S.theme === 'dark';
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#080d16' : '#f5f7f4');
 }
 function save() { S.upd = Date.now(); persist(); clearTimeout(pushT); pushT = setTimeout(push, 1200); }
 async function push() {
@@ -299,7 +304,7 @@ const SC = {
   app() {
     ctx.f = ctx.f || {}; const F = ctx.f; F.at = F.at || loc(new Date()); const date = new Date(F.at);
     if (F.site === undefined) F.site = suggest(date);
-    const sheet = ctx.sheet ? `<div class="ov" data-a="closeSheet"></div><div class="bs"><i class="hdl" data-sheet-handle aria-hidden="true"></i><h2 style="margin:8px 0 0">Local da aplicação</h2>${figure(ctx.pick, date, 1)}<p class="zlab ${ctx.err ? 'red' : ''}">${ctx.err || '📍 ' + esc(zl(ctx.pick))}</p><button class="btn" data-a="selSite">Selecionar</button></div>` : '';
+    const sheet = ctx.sheet ? `<div class="ov" data-a="closeSheet"></div><div class="bs"><i class="hdl" data-sheet-handle aria-hidden="true"></i><div class="site-sheet-head"><h2>Local da aplicação</h2><button class="site-sheet-close" type="button" data-a="closeSheet" aria-label="Cancelar escolha do local">×</button></div>${figure(ctx.pick, date, 1)}<p class="zlab ${ctx.err ? 'red' : ''}">${ctx.err || '📍 ' + esc(zl(ctx.pick))}</p><div class="site-sheet-actions"><button class="btn soft" data-a="closeSheet">Cancelar</button><button class="btn" data-a="selSite">Selecionar local</button></div></div>` : '';
     return `${back('Registrar aplicação', 'cancelApp', '<button class="app-cancel" data-a="cancelApp">Cancelar</button>')}<p class="app-form-hint">Preencha os dados e escolha um local. Você pode cancelar sem salvar.</p><label class="rw"><span>📅 Data</span><input id="fa" type="datetime-local" value="${esc(F.at)}"></label><h2>Aplicação de hoje</h2>
     <label class="rw"><span>📝 Notas</span><input id="fn" placeholder="Adicionar notas" value="${esc(F.notes || '')}"></label>
     <label class="rw"><span>💉 Medicação</span><input id="fm" value="${esc(F.med ?? S.medication)}"></label>
@@ -371,7 +376,8 @@ const SC = {
   },
   settings() {
     const f = (id, l, v, ph = '') => `<label class="f" for="${id}">${l}</label><input id="${id}" value="${esc(v ?? '')}" placeholder="${ph}">`;
-    return `${back('Ajustes')}<section class="card">${f('sn', 'Seu nome', S.name)}${f('sh', 'Altura (m)', S.height, 'ex.: 1,76')}${f('sw', 'Peso inicial (kg)', S.wStart)}${f('sg', 'Peso meta (kg)', S.wGoal)}${f('sk', 'Meta de calorias por dia', S.kcal)}${f('swater', 'Meta diária de água (ml)', S.waterGoal, 'ex.: 2000')}<p class="muted s">Ajuste conforme sua rotina e orientação profissional; esta meta é apenas para acompanhamento.</p>${f('si', 'Intervalo entre doses (dias)', S.interval)}${f('sb', 'Dias sem repetir o mesmo local', S.block)}${f('sm', 'Medicação', S.medication)}<button class="btn" data-a="saveSet">Salvar ajustes</button></section>
+    return `${back('Ajustes')}<section class="card theme-card"><div><b class="ct">Aparência</b><p class="muted s">O tema fica salvo no seu perfil e sincroniza entre aparelhos.</p></div><button class="theme-toggle" type="button" data-a="toggleTheme" aria-pressed="${S.theme === 'dark'}"><i data-lucide="${S.theme === 'dark' ? 'sun' : 'moon'}" aria-hidden="true"></i><span>${S.theme === 'dark' ? 'Usar tema claro' : 'Ativar tema noturno'}</span><span class="theme-state">${S.theme === 'dark' ? 'Noturno' : 'Claro'}</span></button></section>
+    <section class="card">${f('sn', 'Seu nome', S.name)}${f('sh', 'Altura (m)', S.height, 'ex.: 1,76')}${f('sw', 'Peso inicial (kg)', S.wStart)}${f('sg', 'Peso meta (kg)', S.wGoal)}${f('sk', 'Meta de calorias por dia', S.kcal)}${f('swater', 'Meta diária de água (ml)', S.waterGoal, 'ex.: 2000')}<p class="muted s">Ajuste conforme sua rotina e orientação profissional; esta meta é apenas para acompanhamento.</p>${f('si', 'Intervalo entre doses (dias)', S.interval)}${f('sb', 'Dias sem repetir o mesmo local', S.block)}${f('sm', 'Medicação', S.medication)}<button class="btn" data-a="saveSet">Salvar ajustes</button></section>
     <section class="card"><b class="ct">Conta e dados</b><p class="muted s">Conectado: ${esc(user?.email || S.email)}. Seus dados sincronizam com a nuvem e só esta conta pode acessá-los.</p>
     <button class="btn soft" data-a="logout">Sair da conta</button>
     <button class="btn soft" data-a="export">Exportar meus dados</button><button class="btn soft out" data-a="wipe">Apagar todos os meus dados</button></section>`;
@@ -415,6 +421,7 @@ function authView() {
 }
 
 function render() {
+  applyTheme();
   if (authRecovery) {
     $('#app').innerHTML = authView();
     $('#app').dataset.view = 'auth';
@@ -446,6 +453,7 @@ const ask = (q, ok) => { const v = prompt(q); if (v != null && v.trim()) ok(v.tr
 const A = {
   tab: v => home(v), back: () => home(), cancelApp: () => home(ctx.returnTab || 'home'), today: () => { day = ymd(new Date()); render() }, pick: v => { day = v; render() },
   fab: () => { $('#sheet').hidden = !$('#sheet').hidden }, settings: () => go('settings'), stats: () => go('stats'),
+  toggleTheme() { S.theme = S.theme === 'dark' ? 'light' : 'dark'; save(); render() },
   newApp: () => go('app', { returnTab: tab }), closeStart: () => { S.closedStart = true; save(); render() },
   saveApp() {
     grab(); const F = ctx.f, at = new Date(F.at), dose = num(F.dose); if (isNaN(at) || !dose || dose <= 0) return alert('Informe a data e a dose.');
