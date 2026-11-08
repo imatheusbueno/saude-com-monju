@@ -90,6 +90,11 @@ h2{font-size:21px;letter-spacing:-.02em}
 .back{width:42px;height:42px;font-size:23px}
 .ttl{gap:12px}
 .ttl b{font-size:19px}
+.ttl:has(.app-cancel){gap:8px}
+.ttl:has(.app-cancel) b{padding:0;text-align:left;white-space:nowrap;font-size:17px}
+.app-cancel{flex:none;padding:10px 13px;border:1px solid #dce8dd;border-radius:999px;background:#fff;color:var(--g);font-size:14px;font-weight:600;transition:background .18s ease,transform .18s ease}
+.app-cancel:hover{background:#edf5ee;transform:translateY(-1px)}
+.app-form-hint{margin:-11px 0 18px;color:var(--mu);font-size:14px}
 .emp{border-radius:24px}
 #tabs{left:50%;right:auto;transform:translateX(-50%);width:min(560px,calc(100% - 28px));max-width:560px;bottom:calc(env(safe-area-inset-bottom) + 12px);padding:7px;border:1px solid #e8ede8;background:#ffffffed;backdrop-filter:blur(16px);box-shadow:0 10px 34px #1c2a1d1c}
 #tabs button{gap:5px;padding:8px 4px;font-size:11px;transition:color .2s ease,background .2s ease}
@@ -100,7 +105,10 @@ h2{font-size:21px;letter-spacing:-.02em}
 #sheet{right:max(20px,calc(50% - 350px));bottom:calc(env(safe-area-inset-bottom) + 174px);border:1px solid var(--ln);border-radius:20px;box-shadow:0 16px 44px #15251a24;animation:sheet-in .2s ease both}
 #sheet button{font-size:15px;border-radius:12px}
 #sheet button:hover{background:#f3f7f3}
-.fig{max-height:460px}
+.fig{width:min(100%,300px);max-height:min(460px,52vh);object-fit:contain}
+.fig .z-clickable{cursor:pointer}
+.fig .z-clickable:focus-visible ellipse{stroke:#1f5131;stroke-width:3}
+.zone-selected-dot{fill:#fff;stroke:none}
 .z ellipse{transition:fill .18s ease,stroke-width .18s ease}
 .zf:hover ellipse{stroke-width:3}
 .toast{position:fixed;z-index:20;left:50%;bottom:calc(env(safe-area-inset-bottom) + 92px);transform:translateX(-50%);width:max-content;max-width:min(520px,calc(100% - 32px));padding:13px 18px;border-radius:14px;background:#26352b;color:#fff;font-size:14px;box-shadow:0 8px 28px #14221b30;animation:toast-in .2s ease both}

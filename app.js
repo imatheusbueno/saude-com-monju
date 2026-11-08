@@ -180,19 +180,29 @@ const zoneLeft = (id, date) => { let m = 0; S.apps.forEach(a => { if (a.site !==
 const suggest = date => { const lu = id => Math.max(0, ...S.apps.filter(a => a.site === id).map(a => +new Date(a.at))); return ZONES.map(z => z[0]).filter(id => !zoneLeft(id, date)).sort((a, b) => lu(a) - lu(b))[0] || '' };
 function figure(sel, date, click) {
   const z = ZONES.map(([id, l, cx, cy, rx, ry]) => { const left = zoneLeft(id, date), cls = id === sel ? 'zs' : left ? 'zb' : 'zf';
-    return `<g class="z ${cls}" ${click ? `data-a="zone" data-v="${id}"` : ''}><title>${esc(l)}${left ? ` — livre em ${left}d` : ''}</title><ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"/>${id === sel ? `<circle cx="${cx}" cy="${cy}" r="3.5" fill="#fff"/>` : ''}</g>` }).join('');
-  return `<svg viewBox="0 0 300 540" class="fig" role="img" aria-label="Mapa dos locais de aplicação"><defs><linearGradient id="sk" x1="0" x2="1"><stop offset="0" stop-color="#e3e6ea"/><stop offset=".5" stop-color="#fafafa"/><stop offset="1" stop-color="#dde0e5"/></linearGradient></defs>
-  <g fill="url(#sk)" stroke="#c6ccd4" stroke-width="1.5"><ellipse cx="150" cy="48" rx="26" ry="32"/><rect x="140" y="76" width="20" height="26"/>
-  <path d="M92 112Q150 94 208 112Q226 128 222 172L216 250Q214 290 210 300H90Q86 290 84 250L78 172Q74 128 92 112Z"/>
-  <path id="arm" d="M92 112Q68 118 64 150L54 240Q52 266 58 292L76 294Q82 262 84 240L94 170Z"/><use href="#arm" transform="translate(300 0) scale(-1 1)"/>
-  <path id="leg" d="M92 372Q84 450 94 540H138Q144 450 142 380Z"/><use href="#leg" transform="translate(300 0) scale(-1 1)"/></g>
-  <path d="M125 42Q125 16 150 16Q175 16 175 42Q168 28 150 28Q132 28 125 42Z" fill="#70747b"/><circle cx="150" cy="242" r="2" fill="#b4bac3"/>
-  <path d="M90 290H210L214 372L158 378L150 330L142 378L86 372Z" fill="#8d9096" stroke="#7a7d83" stroke-width="1.5"/>${z}</svg>`;
+    return `<g class="z ${cls} ${click ? 'z-clickable' : ''}" ${click ? `data-a="zone" data-v="${id}" role="button" tabindex="0" aria-label="${esc(l)}${left ? `, livre em ${left} dias` : ''}"` : ''}><title>${esc(l)}${left ? ` — livre em ${left}d` : ''}</title><ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"/>${id === sel ? `<circle class="zone-selected-dot" cx="${cx}" cy="${cy}" r="3.5"/>` : ''}</g>` }).join('');
+  return `<svg viewBox="0 0 300 540" class="fig" role="group" aria-label="Mapa frontal do corpo e locais de aplicação">
+  <defs><linearGradient id="skin" x1="0" x2="1"><stop offset="0" stop-color="#e9bda7"/><stop offset=".48" stop-color="#f6d8c8"/><stop offset="1" stop-color="#e6b9a2"/></linearGradient></defs>
+  <ellipse cx="150" cy="524" rx="92" ry="9" fill="#1e3528" opacity=".08"/>
+  <g fill="url(#skin)" stroke="#d7a893" stroke-width="1.4" stroke-linejoin="round">
+    <path d="M137 76h26v27h-26z"/>
+    <ellipse cx="150" cy="47" rx="25" ry="31"/>
+    <path d="M126 45c2-20 13-31 28-31 15 0 25 10 27 28-6-5-10-12-12-19-9 9-21 14-43 15z" fill="#51443f" stroke="#51443f"/>
+    <path d="M132 50c5-3 9-3 13 0m10 0c4-3 9-3 13 0" fill="none" stroke="#76584e" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M149 52v9m-6 7c4 3 10 3 14 0" fill="none" stroke="#bd8170" stroke-width="1.4" stroke-linecap="round"/>
+    <path d="M101 111c-14 5-20 18-22 38l-8 108c-1 16 3 27 13 29 9 2 14-7 15-21l8-91 4-53zm98 0c14 5 20 18 22 38l8 108c1 16-3 27-13 29-9 2-14-7-15-21l-8-91-4-53z"/>
+    <path d="M137 94c-15 2-26 8-35 18l7 48-5 136c0 12 6 18 16 18h60c10 0 16-6 16-18l-5-136 7-48c-9-10-20-16-35-18l-13 14z"/>
+    <path d="M107 305c-4 16-5 35-5 55l-4 80c-1 24 2 55 5 84 1 9 7 14 15 13 7-1 10-6 10-15l2-80 7-76 13-31-13-31z"/>
+    <path d="M193 305c4 16 5 35 5 55l4 80c1 24-2 55-5 84-1 9-7 14-15 13-7-1-10-6-10-15l-2-80-7-76-13-31 13-31z"/>
+  </g>
+  <path d="M137 96c4 8 8 12 13 12s9-4 13-12M150 112v178m-43-12h14m62 0h14m-47 57v25m-27 67h24m30-67v25m-30 78h-20m56-103v25m20 78h-20" fill="none" stroke="#c79681" stroke-width="1.2" stroke-linecap="round" opacity=".55"/>
+  <path d="M150 145v106m-24-64h48" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".12"/>
+  ${z}</svg>`;
 }
 const grab = () => { ctx.f = Object.assign(ctx.f || {}, { at: $('#fa').value, notes: $('#fn').value, med: $('#fm').value, dose: $('#fd').value, pain: $('#fp').value }) };
 
 const hd = (t, extra = '') => `<div class="hd"><h1>${t}</h1><div>${extra}<span class="fl">🔥 ${streak()}</span><button data-a="settings" aria-label="Ajustes">⚙️</button></div></div>`;
-const back = t => `<div class="ttl"><button class="back" data-a="back" aria-label="Voltar">‹</button><b>${t}</b></div>`;
+const back = (t, action = 'back', extra = '<span class="ttl-spacer" aria-hidden="true"></span>') => `<div class="ttl"><button class="back" data-a="${action}" aria-label="Voltar">‹</button><b>${t}</b>${extra}</div>`;
 
 function nextCard() {
   const n = nextDate(), l = lastApp(); let body;
@@ -266,7 +276,7 @@ const SC = {
     ctx.f = ctx.f || {}; const F = ctx.f; F.at = F.at || loc(new Date()); const date = new Date(F.at);
     if (F.site === undefined) F.site = suggest(date);
     const sheet = ctx.sheet ? `<div class="ov" data-a="closeSheet"></div><div class="bs"><i class="hdl"></i><h2 style="margin:8px 0 0">Local da aplicação</h2>${figure(ctx.pick, date, 1)}<p class="zlab ${ctx.err ? 'red' : ''}">${ctx.err || '📍 ' + esc(zl(ctx.pick))}</p><button class="btn" data-a="selSite">Selecionar</button></div>` : '';
-    return `${back('Registrar aplicação')}<label class="rw"><span>📅 Data</span><input id="fa" type="datetime-local" value="${esc(F.at)}"></label><h2>Aplicação de hoje</h2>
+    return `${back('Registrar aplicação', 'cancelApp', '<button class="app-cancel" data-a="cancelApp">Cancelar</button>')}<p class="app-form-hint">Preencha os dados e escolha um local. Você pode cancelar sem salvar.</p><label class="rw"><span>📅 Data</span><input id="fa" type="datetime-local" value="${esc(F.at)}"></label><h2>Aplicação de hoje</h2>
     <label class="rw"><span>📝 Notas</span><input id="fn" placeholder="Adicionar notas" value="${esc(F.notes || '')}"></label>
     <label class="rw"><span>💉 Medicação</span><input id="fm" value="${esc(F.med ?? S.medication)}"></label>
     <label class="rw"><span>💊 Dose (mg)</span><input id="fd" inputmode="decimal" placeholder="ex.: 5" value="${esc(F.dose ?? (lastApp() ? lastApp().dose : ''))}"></label>
@@ -410,9 +420,9 @@ function addMeal(m) { S.meals.push({ id: uid(), date: day, type: ctx.type, name:
 const ask = (q, ok) => { const v = prompt(q); if (v != null && v.trim()) ok(v.trim()) };
 
 const A = {
-  tab: v => home(v), back: () => { screen = null; render() }, today: () => { day = ymd(new Date()); render() }, pick: v => { day = v; render() },
+  tab: v => home(v), back: () => home(), cancelApp: () => home(ctx.returnTab || 'home'), today: () => { day = ymd(new Date()); render() }, pick: v => { day = v; render() },
   fab: () => { $('#sheet').hidden = !$('#sheet').hidden }, settings: () => go('settings'), stats: () => go('stats'),
-  newApp: () => go('app'), closeStart: () => { S.closedStart = true; save(); render() },
+  newApp: () => go('app', { returnTab: tab }), closeStart: () => { S.closedStart = true; save(); render() },
   saveApp() {
     grab(); const F = ctx.f, at = new Date(F.at), dose = num(F.dose); if (isNaN(at) || !dose || dose <= 0) return alert('Informe a data e a dose.');
     if (!F.site) return alert('Escolha o local da aplicação.');
@@ -587,6 +597,11 @@ document.addEventListener('click', e => {
   if (['authMode', 'resetPassword'].includes(t.dataset.a) && cloud && authReady && !user) { A[t.dataset.a](t.dataset.v); return; }
   if (!cloud || !authReady || !user) return;
   if (A[t.dataset.a]) A[t.dataset.a](t.dataset.v);
+});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const t = e.target.closest('g.z-clickable[data-a="zone"]');
+  if (t) { e.preventDefault(); t.click() }
 });
 $('#mf').onchange = async e => { const f = e.target.files[0]; e.target.value = ''; if (!f) return; const img = await shrink(f), name = prompt('Nome da refeição:'); if (!name) return; addMeal({ name, kcal: num(prompt('Calorias (kcal):')) || 0, img }) };
 $('#pf').onchange = async e => { const f = e.target.files[0]; e.target.value = ''; if (!f) return; S.photos.push({ d: ymd(new Date()), img: await shrink(f, 600) }); save(); render() };
