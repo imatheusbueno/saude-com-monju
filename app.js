@@ -99,7 +99,7 @@ function loadStoredData(key) {
   try { return Object.assign(def(), JSON.parse(localStorage.getItem(key) || '{}')); }
   catch (error) { console.error('Não foi possível carregar os dados salvos neste aparelho.', error); return def(); }
 }
-let user = null, activeUserId = null, authReady = false, authRecovery = false, authMode = 'signin', tab = 'home', screen = null, day = ymd(new Date()), ctx = {}, pushT;
+let user = null, activeUserId = null, authReady = false, authRecovery = false, authMode = 'signin', tab = 'home', screen = null, day = ymd(new Date()), ctx = {}, pushT, pullGesture = null, pullRefreshing = false, pullHideT, sheetDrag = null;
 const storageKey = () => user ? `${KEY}:${user.id}` : KEY;
 let toastT;
 function notify(message) {
@@ -131,11 +131,35 @@ async function pull() {
   try {
     const { data, error } = await cloud.from('user_data').select('data').maybeSingle();
     if (error) throw error;
-    if (data && (data.data.upd || 0) > S.upd) { S = Object.assign(def(), data.data); persist(); render(); } else push();
+    if (data && (data.data.upd || 0) > S.upd) { S = Object.assign(def(), data.data); persist(); render(); return true; }
+    return await push();
   } catch (error) {
     console.error('Falha ao carregar os dados do Supabase.', error);
     notify('Não foi possível carregar os dados da nuvem.');
+    return false;
   }
+}
+function setPullIndicator(distance, label) {
+  const indicator = $('#pull-refresh'), text = $('#pull-refresh-label');
+  if (!indicator || !text) return;
+  indicator.classList.toggle('is-visible', distance > 0);
+  indicator.style.setProperty('--pull-offset', `${distance}px`);
+  indicator.setAttribute('aria-hidden', distance > 0 ? 'false' : 'true');
+  if (label) text.textContent = label;
+}
+async function refreshFromGesture() {
+  if (pullRefreshing || !user) return;
+  pullRefreshing = true;
+  clearTimeout(pullHideT);
+  $('#pull-refresh')?.classList.add('is-loading');
+  setPullIndicator(62, 'Atualizando…');
+  const synced = await pull();
+  $('#pull-refresh')?.classList.remove('is-loading');
+  setPullIndicator(62, synced ? 'Atualizado' : 'Não foi possível atualizar');
+  pullRefreshing = false;
+  pullHideT = setTimeout(() => {
+    setPullIndicator(0, 'Puxe para atualizar');
+  }, synced ? 900 : 1800);
 }
 
 const lastApp = () => [...S.apps].sort((a, b) => b.at.localeCompare(a.at))[0];
@@ -275,7 +299,7 @@ const SC = {
   app() {
     ctx.f = ctx.f || {}; const F = ctx.f; F.at = F.at || loc(new Date()); const date = new Date(F.at);
     if (F.site === undefined) F.site = suggest(date);
-    const sheet = ctx.sheet ? `<div class="ov" data-a="closeSheet"></div><div class="bs"><i class="hdl"></i><h2 style="margin:8px 0 0">Local da aplicação</h2>${figure(ctx.pick, date, 1)}<p class="zlab ${ctx.err ? 'red' : ''}">${ctx.err || '📍 ' + esc(zl(ctx.pick))}</p><button class="btn" data-a="selSite">Selecionar</button></div>` : '';
+    const sheet = ctx.sheet ? `<div class="ov" data-a="closeSheet"></div><div class="bs"><i class="hdl" data-sheet-handle aria-hidden="true"></i><h2 style="margin:8px 0 0">Local da aplicação</h2>${figure(ctx.pick, date, 1)}<p class="zlab ${ctx.err ? 'red' : ''}">${ctx.err || '📍 ' + esc(zl(ctx.pick))}</p><button class="btn" data-a="selSite">Selecionar</button></div>` : '';
     return `${back('Registrar aplicação', 'cancelApp', '<button class="app-cancel" data-a="cancelApp">Cancelar</button>')}<p class="app-form-hint">Preencha os dados e escolha um local. Você pode cancelar sem salvar.</p><label class="rw"><span>📅 Data</span><input id="fa" type="datetime-local" value="${esc(F.at)}"></label><h2>Aplicação de hoje</h2>
     <label class="rw"><span>📝 Notas</span><input id="fn" placeholder="Adicionar notas" value="${esc(F.notes || '')}"></label>
     <label class="rw"><span>💉 Medicação</span><input id="fm" value="${esc(F.med ?? S.medication)}"></label>
@@ -603,6 +627,59 @@ document.addEventListener('keydown', e => {
   const t = e.target.closest('g.z-clickable[data-a="zone"]');
   if (t) { e.preventDefault(); t.click() }
 });
+document.addEventListener('pointerdown', e => {
+  const handle = e.target.closest('[data-sheet-handle]');
+  const sheet = document.querySelector('.bs');
+  if (!handle || !sheet || e.button !== 0) return;
+  sheetDrag = { id: e.pointerId, y: e.clientY, distance: 0, sheet };
+  sheet.classList.add('is-dragging');
+  handle.setPointerCapture(e.pointerId);
+});
+document.addEventListener('pointermove', e => {
+  if (!sheetDrag || e.pointerId !== sheetDrag.id) return;
+  const distance = Math.max(0, e.clientY - sheetDrag.y);
+  sheetDrag.distance = distance;
+  sheetDrag.sheet.style.transform = `translateY(${Math.min(distance, 220)}px)`;
+});
+function finishSheetDrag(e) {
+  if (!sheetDrag || e.pointerId !== sheetDrag.id) return;
+  const drag = sheetDrag;
+  sheetDrag = null;
+  drag.sheet.classList.remove('is-dragging');
+  if (drag.distance >= 72) A.closeSheet();
+  else drag.sheet.style.transform = '';
+}
+document.addEventListener('pointerup', finishSheetDrag);
+document.addEventListener('pointercancel', finishSheetDrag);
+document.addEventListener('touchstart', e => {
+  if (e.touches.length !== 1) { pullGesture = null; setPullIndicator(0); return; }
+  if (!authReady || !user || screen || pullRefreshing || document.querySelector('.bs')) return;
+  if (window.scrollY > 0 || e.target.closest('button,a,input,select,textarea,[contenteditable="true"],#sheet,#fab,#fab2,#tabs')) return;
+  pullGesture = { x: e.touches[0].clientX, y: e.touches[0].clientY, distance: 0 };
+}, { passive: true });
+document.addEventListener('touchmove', e => {
+  if (!pullGesture) return;
+  if (e.touches.length !== 1) { pullGesture = null; setPullIndicator(0); return; }
+  const touch = e.touches[0], dx = touch.clientX - pullGesture.x, dy = touch.clientY - pullGesture.y;
+  if (Math.abs(dx) > Math.max(12, dy * .7) || dy < 0 || window.scrollY > 0) { pullGesture = null; setPullIndicator(0); return; }
+  if (dy < 8) return;
+  e.preventDefault();
+  pullGesture.distance = dy;
+  const offset = Math.min(62, dy * .68);
+  setPullIndicator(offset, dy >= 90 ? 'Solte para atualizar' : 'Puxe para atualizar');
+}, { passive: false });
+document.addEventListener('touchend', e => {
+  if (e.touches.length) return;
+  if (!pullGesture) return;
+  const shouldRefresh = pullGesture.distance >= 90;
+  pullGesture = null;
+  if (shouldRefresh) refreshFromGesture();
+  else setPullIndicator(0, 'Puxe para atualizar');
+}, { passive: true });
+document.addEventListener('touchcancel', () => {
+  pullGesture = null;
+  setPullIndicator(0, 'Puxe para atualizar');
+}, { passive: true });
 $('#mf').onchange = async e => { const f = e.target.files[0]; e.target.value = ''; if (!f) return; const img = await shrink(f), name = prompt('Nome da refeição:'); if (!name) return; addMeal({ name, kcal: num(prompt('Calorias (kcal):')) || 0, img }) };
 $('#pf').onchange = async e => { const f = e.target.files[0]; e.target.value = ''; if (!f) return; S.photos.push({ d: ymd(new Date()), img: await shrink(f, 600) }); save(); render() };
 

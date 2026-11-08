@@ -60,6 +60,7 @@ Fotos são reduzidas no navegador e salvas como parte dos dados do perfil; não 
 - Assistente de preferências que gera sugestões de refeições e permite registrá-las na aba Nutrição.
 - Peso, medidas, fotos de progresso, exportação e exclusão dos dados do perfil.
 - Interface responsiva com suporte a movimento reduzido.
+- No topo das abas principais, puxe para baixo para sincronizar os dados; no mapa de aplicação, arraste a alça do painel para baixo para fechá-lo sem atualizar a página.
 - Ícone dedicado para a tela inicial do iPhone (`apple-touch-icon.png`) e favicon (`icon.svg`). Para adicionar, abra o site no Safari, toque em **Compartilhar > Adicionar à Tela de Início**.
 
 O acompanhamento de água não envia notificações e depende de abrir o app para registrar o consumo. Lembretes com o app fechado, comunidade e armazenamento de fotos dedicado ainda não estão implementados. A meta inicial de água é um valor editável para acompanhamento, não uma recomendação médica.
