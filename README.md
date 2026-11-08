@@ -56,7 +56,7 @@ Fotos são reduzidas no navegador e salvas como parte dos dados do perfil; não 
 ## Recursos atuais
 
 - Registro de aplicação, dose, local, dor e notas; acompanhamento da próxima data e rodízio dos locais.
-- Mapa interativo de aplicação sobre o novo modelo anatômico, com regiões selecionáveis transparentes e rótulo de local em uma linha.
+- Mapa interativo de aplicação com fundo branco e áreas selecionáveis preenchidas para destacar o local, mantendo o nome em uma linha.
 - Registro de refeições, calorias e macros, acompanhamento diário de água e meta editável.
 - Assistente de preferências que gera sugestões de refeições e permite registrá-las na aba Nutrição.
 - Peso, medidas, fotos de progresso, exportação e exclusão dos dados do perfil.
