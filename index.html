@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#f5f7f4">
+<meta name="description" content="Acompanhe aplicações, refeições e seu progresso em um só lugar.">
+<title>Meu Cuidado — Registro pessoal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main id="app"></main>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+<div id="sheet" hidden>
+  <button data-a="newApp">💉 Registrar aplicação</button>
+  <button data-a="mealFab">🍴 Registrar refeição</button>
+  <button data-a="addWeight">⚖️ Registrar peso</button>
+</div>
+<button id="fab" data-a="fab" aria-label="Registrar">＋</button>
+<button id="fab2" data-a="mealFab">＋ Registrar refeição</button>
+<nav id="tabs">
+  <button data-a="tab" data-v="home"><i data-lucide="house" aria-hidden="true"></i>Início</button>
+  <button data-a="tab" data-v="nutri"><i data-lucide="utensils" aria-hidden="true"></i>Nutrição</button>
+  <button data-a="tab" data-v="comm"><i data-lucide="users-round" aria-hidden="true"></i>Comunidade</button>
+  <button data-a="tab" data-v="doses"><i data-lucide="syringe" aria-hidden="true"></i>Doses</button>
+  <button data-a="tab" data-v="perfil"><i data-lucide="user-round" aria-hidden="true"></i>Perfil</button>
+</nav>
+<input type="file" id="mf" accept="image/*" hidden>
+<input type="file" id="pf" accept="image/*" hidden>
+<script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
