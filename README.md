@@ -18,13 +18,13 @@ Netlify, Cloudflare Pages e outros hosts estáticos também podem publicar os me
 
 ## Cadastro, login e sincronização
 
-O app oferece cadastro e login com e-mail e senha, redefinição de senha por e-mail e login opcional com Google. Todos os métodos autenticam no Supabase e os registros só abrem após a autenticação. Para ativar:
+O app oferece cadastro e login com e-mail e senha, redefinição de senha por e-mail e login opcional com Google. Todos os métodos autenticam no Supabase e os registros só abrem após a autenticação. O projeto Supabase já está conectado, com tabela, RLS e URLs de retorno configuradas.
 
-1. Crie um projeto Supabase e execute `supabase.sql` no **SQL Editor**.
-2. Em **Authentication > URL Configuration**, configure `https://imatheusbueno.github.io/saude-com-monju/` como **Site URL** e URL de redirecionamento permitida. O mesmo endereço é usado para confirmação e recuperação de senha.
-3. Em **Authentication > Providers > Email**, mantenha o provedor de e-mail ativo e habilite confirmação de e-mail para novos cadastros.
-4. Em **Project Settings > API**, copie a Project URL e a chave pública `anon` para `SUPABASE_URL` e `SUPABASE_ANON_KEY` no início de `app.js`.
-5. Publique o site novamente. O usuário poderá criar uma conta por e-mail e senha; se a confirmação de e-mail estiver ativa, deve confirmar o link antes de entrar.
+1. A tabela `public.user_data` tem RLS habilitado e uma policy que permite acesso apenas à linha do usuário autenticado.
+2. O Supabase usa `https://imatheusbueno.github.io/saude-com-monju/` como URL do app e URL permitida de retorno para login e confirmação por e-mail.
+3. O provedor Email está ativo e a confirmação de e-mail é exigida antes do primeiro login.
+4. `app.js` contém a URL do projeto e a chave pública **publishable**, destinada ao navegador. Não substitua por `service_role` ou outra chave secreta.
+5. Após a publicação, o usuário poderá criar uma conta por e-mail e senha e confirmar o endereço recebido por e-mail.
 
 ### Ativar Google OAuth (opcional)
 
@@ -33,9 +33,9 @@ O app oferece cadastro e login com e-mail e senha, redefinição de senha por e-
 3. Copie o Client ID e o Client Secret do Google para **Supabase > Authentication > Providers > Google** e habilite o provedor.
 4. Salve a configuração e teste o botão **Continuar com Google** no site publicado.
 
-Client Secret do Google só deve ser informado no painel Supabase, nunca no código, GitHub ou chat. Não consigo criar o cliente OAuth sem acesso ao projeto Google Cloud/Supabase do proprietário; posso orientar pelos painéis, mas não devo receber nem guardar suas senhas ou segredos.
+O login Google ainda depende da configuração do OAuth Client ID/Secret no Google Cloud e no Supabase. Client Secret do Google só deve ser informado no painel Supabase, nunca no código, GitHub ou chat.
 
-A chave `anon` é pública e pode ser incluída no navegador; ela **não** substitui as regras de acesso. Nunca coloque a chave `service_role` no front-end. A tabela usa RLS e só permite que uma conta autenticada leia e altere a linha cujo `user_id` corresponde à própria conta. Os dados de cada conta são salvos no navegador e sincronizados com a nuvem. Configure as URLs autorizadas corretamente antes de compartilhar o site.
+A chave `publishable` é pública e pode ser incluída no navegador; ela **não** substitui as regras de acesso. Nunca coloque a chave `secret`/`service_role` no front-end. A tabela usa RLS e só permite que uma conta autenticada leia e altere a linha cujo `user_id` corresponde à própria conta. Os dados de cada conta são salvos no navegador e sincronizados com a nuvem. Configure as URLs autorizadas corretamente antes de compartilhar o site.
 
 ## Código público e site público
 

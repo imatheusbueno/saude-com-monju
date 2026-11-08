@@ -1,7 +1,8 @@
-// Configure o Supabase aqui para liberar cadastro e login.
-const SUPABASE_URL = '', SUPABASE_ANON_KEY = '';
+// A chave publishable é pública; nunca coloque chaves secret/service_role aqui.
+const SUPABASE_URL = 'https://cprvwstvlqdmuusabina.supabase.co';
+const SUPABASE_PUBLIC_KEY = 'sb_publishable_-UJMBgbbglRJKu0izI5J7A_U-Ptqo9u';
 
-const cloud = window.supabase && SUPABASE_URL && SUPABASE_ANON_KEY ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+const cloud = window.supabase && SUPABASE_URL && SUPABASE_PUBLIC_KEY ? supabase.createClient(SUPABASE_URL, SUPABASE_PUBLIC_KEY) : null;
 const KEY = 'doses-app-v1';
 const ZONES = [['ab_sd', 'Abdômen superior direito', 120, 215, 13, 13], ['ab_se', 'Abdômen superior esquerdo', 180, 215, 13, 13],
   ['ab_id', 'Abdômen inferior direito', 122, 268, 13, 13], ['ab_ie', 'Abdômen inferior esquerdo', 178, 268, 13, 13],
