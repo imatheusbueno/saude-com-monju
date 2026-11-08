@@ -4,12 +4,12 @@ const SUPABASE_PUBLIC_KEY = 'sb_publishable_-UJMBgbbglRJKu0izI5J7A_U-Ptqo9u';
 
 const cloud = window.supabase && SUPABASE_URL && SUPABASE_PUBLIC_KEY ? supabase.createClient(SUPABASE_URL, SUPABASE_PUBLIC_KEY) : null;
 const KEY = 'doses-app-v1';
-const ZONES = [['ab_sd', 'Abdômen superior direito', 120, 215, 13, 13], ['ab_se', 'Abdômen superior esquerdo', 180, 215, 13, 13],
-  ['ab_id', 'Abdômen inferior direito', 122, 268, 13, 13], ['ab_ie', 'Abdômen inferior esquerdo', 178, 268, 13, 13],
-  ['ab_ld', 'Lateral direita do abdômen', 98, 240, 8, 22], ['ab_le', 'Lateral esquerda do abdômen', 202, 240, 8, 22],
-  ['c_ld', 'Coxa direita (lateral)', 98, 450, 7, 26], ['c_fd', 'Coxa direita (frente)', 124, 455, 13, 30],
-  ['c_fe', 'Coxa esquerda (frente)', 176, 455, 13, 30], ['c_le', 'Coxa esquerda (lateral)', 202, 450, 7, 26],
-  ['a_d', 'Braço direito', 72, 190, 11, 30], ['a_e', 'Braço esquerdo', 228, 190, 11, 30]];
+const ZONES = [['ab_sd', 'Abdômen superior direito', 148, 271, 14, 13], ['ab_se', 'Abdômen superior esquerdo', 205, 271, 14, 13],
+  ['ab_id', 'Abdômen inferior direito', 148, 317, 14, 13], ['ab_ie', 'Abdômen inferior esquerdo', 205, 317, 14, 13],
+  ['ab_ld', 'Lateral direita do abdômen', 111, 290, 9, 22], ['ab_le', 'Lateral esquerda do abdômen', 241, 290, 9, 22],
+  ['c_ld', 'Coxa direita (lateral)', 103, 464, 9, 24], ['c_fd', 'Coxa direita (frente)', 137, 460, 15, 24],
+  ['c_fe', 'Coxa esquerda (frente)', 215, 460, 15, 24], ['c_le', 'Coxa esquerda (lateral)', 250, 464, 9, 24],
+  ['a_d', 'Braço direito', 77, 230, 11, 26], ['a_e', 'Braço esquerdo', 276, 230, 11, 26]];
 const ML = { cafe: ['Café da manhã', '☕'], lanche_m: ['Lanche da manhã', '🍎'], almoco: ['Almoço', '🥗'], lanche_t: ['Lanche da tarde', '🍳'], jantar: ['Jantar', '🍜'], lanches: ['Lanches', '🍎'] };
 const FOODS = [['Arroz branco (100 g)', 130, 2.7, 28, .3, .4], ['Feijão cozido (100 g)', 76, 4.8, 14, .5, 8.5], ['Peito de frango grelhado (100 g)', 165, 31, 0, 3.6, 0], ['Carne bovina grelhada (100 g)', 220, 26, 0, 12, 0], ['Ovo cozido (1 un)', 78, 6.3, .6, 5.3, 0], ['Pão francês (1 un)', 150, 4.7, 29, 1.5, 1.4], ['Banana (1 un)', 89, 1.1, 23, .3, 2.6], ['Maçã (1 un)', 72, .4, 19, .2, 3.3], ['Iogurte natural (170 g)', 104, 5.9, 8, 5.6, 0], ['Salada de alface (100 g)', 15, 1.4, 2.9, .2, 1.3], ['Café com leite (1 xícara)', 60, 3, 5, 3, 0], ['Whey protein (1 dose)', 120, 24, 3, 1.5, 0]];
 const MEAL_OPTIONS = [['cafe', 'Café da manhã', '☕'], ['lanche_m', 'Lanche da manhã', '🍎'], ['almoco', 'Almoço', '🥗'], ['lanche_t', 'Lanche da tarde', '🍳'], ['jantar', 'Jantar', '🍜']];
@@ -210,23 +210,10 @@ const suggest = date => { const lu = id => Math.max(0, ...S.apps.filter(a => a.s
 function figure(sel, date, click) {
   const z = ZONES.map(([id, l, cx, cy, rx, ry]) => { const left = zoneLeft(id, date), cls = id === sel ? 'zs' : left ? 'zb' : 'zf';
     return `<g class="z ${cls} ${click ? 'z-clickable' : ''}" ${click ? `data-a="zone" data-v="${id}" role="button" tabindex="0" aria-label="${esc(l)}${left ? `, livre em ${left} dias` : ''}"` : ''}><title>${esc(l)}${left ? ` — livre em ${left}d` : ''}</title><ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"/>${id === sel ? `<circle class="zone-selected-dot" cx="${cx}" cy="${cy}" r="3.5"/>` : ''}</g>` }).join('');
-  return `<svg viewBox="0 0 300 540" class="fig" role="group" aria-label="Mapa frontal do corpo e locais de aplicação">
-  <defs><linearGradient id="skin" x1="0" x2="1"><stop offset="0" stop-color="#e9bda7"/><stop offset=".48" stop-color="#f6d8c8"/><stop offset="1" stop-color="#e6b9a2"/></linearGradient></defs>
-  <ellipse cx="150" cy="524" rx="92" ry="9" fill="#1e3528" opacity=".08"/>
-  <g fill="url(#skin)" stroke="#d7a893" stroke-width="1.4" stroke-linejoin="round">
-    <path d="M137 76h26v27h-26z"/>
-    <ellipse cx="150" cy="47" rx="25" ry="31"/>
-    <path d="M126 45c2-20 13-31 28-31 15 0 25 10 27 28-6-5-10-12-12-19-9 9-21 14-43 15z" fill="#51443f" stroke="#51443f"/>
-    <path d="M132 50c5-3 9-3 13 0m10 0c4-3 9-3 13 0" fill="none" stroke="#76584e" stroke-width="1.5" stroke-linecap="round"/>
-    <path d="M149 52v9m-6 7c4 3 10 3 14 0" fill="none" stroke="#bd8170" stroke-width="1.4" stroke-linecap="round"/>
-    <path d="M101 111c-14 5-20 18-22 38l-8 108c-1 16 3 27 13 29 9 2 14-7 15-21l8-91 4-53zm98 0c14 5 20 18 22 38l8 108c1 16-3 27-13 29-9 2-14-7-15-21l-8-91-4-53z"/>
-    <path d="M137 94c-15 2-26 8-35 18l7 48-5 136c0 12 6 18 16 18h60c10 0 16-6 16-18l-5-136 7-48c-9-10-20-16-35-18l-13 14z"/>
-    <path d="M107 305c-4 16-5 35-5 55l-4 80c-1 24 2 55 5 84 1 9 7 14 15 13 7-1 10-6 10-15l2-80 7-76 13-31-13-31z"/>
-    <path d="M193 305c4 16 5 35 5 55l4 80c1 24-2 55-5 84-1 9-7 14-15 13-7-1-10-6-10-15l-2-80-7-76-13-31 13-31z"/>
-  </g>
-  <path d="M137 96c4 8 8 12 13 12s9-4 13-12M150 112v178m-43-12h14m62 0h14m-47 57v25m-27 67h24m30-67v25m-30 78h-20m56-103v25m20 78h-20" fill="none" stroke="#c79681" stroke-width="1.2" stroke-linecap="round" opacity=".55"/>
-  <path d="M150 145v106m-24-64h48" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".12"/>
-  ${z}</svg>`;
+  return `<div class="fig-wrap">
+    <img class="fig-photo" src="injection-map.png" alt="Ilustração frontal com os locais disponíveis para aplicação">
+    <svg viewBox="0 0 349 550" class="fig photo-fig" role="group" aria-label="Selecione um local para aplicação">${z}</svg>
+  </div>`;
 }
 const grab = () => { ctx.f = Object.assign(ctx.f || {}, { at: $('#fa').value, notes: $('#fn').value, med: $('#fm').value, dose: $('#fd').value, pain: $('#fp').value }) };
 
