@@ -1,12 +1,12 @@
 # Meu Cuidado — registro pessoal
 
-Aplicativo web estático para acompanhar aplicações, refeições e medidas. Não precisa de build. O acesso exige autenticação com Google e sincronização com Supabase.
+Aplicativo web estático para acompanhar aplicações, refeições e medidas. Não precisa de build. O acesso exige autenticação por e-mail/senha ou Google e sincronização com Supabase.
 
 ## Executar e publicar
 
 Repositório público: [imatheusbueno/saude-com-monju](https://github.com/imatheusbueno/saude-com-monju). Site: [https://imatheusbueno.github.io/saude-com-monju/](https://imatheusbueno.github.io/saude-com-monju/).
 
-O site já está publicado. O uso dos registros permanece bloqueado até configurar Supabase e login Google; não existe modo de uso sem conta. Para testar apenas a interface, abra `index.html` em um navegador.
+O site já está publicado e conectado ao Supabase. O cadastro por e-mail/senha está disponível após a publicação da versão mais recente; o login Google ainda depende da configuração do OAuth. Para testar apenas a interface, abra `index.html` em um navegador.
 
 ### GitHub Pages
 
